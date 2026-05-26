@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026W杯 webCVアップロード</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+    :root {
+        --bg-0: #04100a;
+        --surface: rgba(16, 33, 25, 0.55);
+        --surface-hi: rgba(24, 48, 36, 0.72);
+        --border: rgba(120, 255, 180, 0.12);
+        --border-hi: rgba(120, 255, 180, 0.32);
+        /* ピッチの緑を基調にしたアクセント群（変数名は互換のため流用） */
+        --cyan: #2ee07a;      /* メインの緑 */
+        --blue: #16a34a;      /* 深い緑 */
+        --purple: #f5b301;    /* 大会アクセント（ゴールド） */
+        --text: #e9f5ee;
+        --text-dim: #9bb3a4;
+        --text-faint: #6b8576;
+        --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+        --sans: 'Zen Kaku Gothic New', -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+
+    body {
+        min-height: 100vh;
+        font-family: var(--sans);
+        color: var(--text);
+        line-height: 1.8;
+        font-weight: 500;
+        background: var(--bg-0);
+        position: relative;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* 背景の環境光グロー */
+    body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background:
+            radial-gradient(ellipse 70% 50% at 15% 0%, rgba(46, 224, 122, 0.18), transparent 60%),
+            radial-gradient(ellipse 60% 60% at 100% 100%, rgba(22, 163, 74, 0.16), transparent 60%),
+            radial-gradient(ellipse 50% 80% at 50% 50%, rgba(245, 179, 1, 0.07), transparent 70%);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    /* グリッドテクスチャ（周辺にフェード） */
+    body::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-image:
+            linear-gradient(rgba(120, 255, 180, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(120, 255, 180, 0.04) 1px, transparent 1px);
+        background-size: 56px 56px;
+        mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 25%, transparent 80%);
+        -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 25%, transparent 80%);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    main {
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 64px 24px 96px;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* 上部クロームバー（パンくず風） */
+    .chrome {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-faint);
+        letter-spacing: 0.08em;
+        margin-bottom: 36px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .chrome-dot {
+        width: 7px; height: 7px; border-radius: 50%;
+        background: var(--cyan);
+        box-shadow: 0 0 12px var(--cyan), 0 0 24px rgba(46, 224, 122, 0.4);
+        animation: pulse 2.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.55; transform: scale(0.92); }
+    }
+
+    .chrome-path { color: var(--text-dim); }
+    .chrome-path .sep { color: var(--text-faint); margin: 0 7px; }
+
+    /* ヘッダー */
+    .page-header { margin-bottom: 52px; }
+
+    .eyebrow {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.22em;
+        color: var(--cyan);
+        text-transform: uppercase;
+        margin-bottom: 22px;
+        padding: 6px 12px;
+        border: 1px solid rgba(46, 224, 122, 0.32);
+        border-radius: 4px;
+        background: rgba(46, 224, 122, 0.06);
+        box-shadow: 0 0 24px rgba(46, 224, 122, 0.08);
+    }
+
+    h1 {
+        font-size: clamp(30px, 4.4vw, 44px);
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        margin: 0;
+        line-height: 1.25;
+        color: var(--text);
+    }
+
+    h1 .accent {
+        background: linear-gradient(135deg, #2ee07a 0%, #16a34a 50%, #f5b301 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+    }
+
+    .subtitle {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        color: var(--text-faint);
+        margin-top: 14px;
+        letter-spacing: 0.02em;
+    }
+
+    /* ステップカード群 */
+    .steps { display: flex; flex-direction: column; gap: 14px; }
+
+    .step {
+        display: flex;
+        gap: 22px;
+        padding: 22px 26px;
+        background: var(--surface);
+        backdrop-filter: blur(16px) saturate(1.2);
+        -webkit-backdrop-filter: blur(16px) saturate(1.2);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s ease;
+        position: relative;
+    }
+
+    .step:hover {
+        border-color: var(--border-hi);
+        background: var(--surface-hi);
+        transform: translateY(-1px);
+    }
+
+    .step-num {
+        flex-shrink: 0;
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, rgba(46, 224, 122, 0.18) 0%, rgba(22, 163, 74, 0.18) 100%);
+        border: 1px solid rgba(46, 224, 122, 0.42);
+        color: var(--cyan);
+        font-family: var(--mono);
+        font-size: 15px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 0 3px rgba(46, 224, 122, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        letter-spacing: 0;
+    }
+
+    /* 「01」「02」表記用のゼロ */
+    .step-num::before {
+        content: '0';
+        opacity: 0.55;
+    }
+
+    .step-body { flex: 1; padding-top: 7px; }
+    .step-body p { margin: 0; color: var(--text); }
+    .step-body strong { color: var(--cyan); font-weight: 700; }
+
+    kbd {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 500;
+        padding: 2px 8px;
+        background: rgba(120, 255, 180, 0.08);
+        border: 1px solid var(--border-hi);
+        border-bottom: 2px solid var(--border-hi);
+        border-radius: 5px;
+        color: var(--text);
+        margin: 0 1px;
+        line-height: 1.4;
+        vertical-align: baseline;
+    }
+
+    /* ブックマークレット ドロップゾーン */
+    .drop-zone {
+        margin: 22px 0;
+        padding: 38px 28px;
+        text-align: center;
+        background:
+            radial-gradient(ellipse 60% 100% at 50% 50%, rgba(46, 224, 122, 0.14), transparent 70%),
+            linear-gradient(180deg, rgba(16, 33, 25, 0.4), rgba(16, 33, 25, 0.7));
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px dashed rgba(46, 224, 122, 0.38);
+        border-radius: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .drop-zone::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(46, 224, 122, 0.6), transparent);
+    }
+
+    .drop-zone-tag {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.32em;
+        color: var(--text-faint);
+        margin-bottom: 22px;
+        text-transform: uppercase;
+    }
+
+    .drop-zone-tag::before,
+    .drop-zone-tag::after {
+        content: '';
+        flex: 1;
+        max-width: 56px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--border-hi), transparent);
+    }
+
+    .bookmarklet-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px 30px;
+        font-family: var(--sans);
+        font-size: 16px;
+        font-weight: 700;
+        color: #04140b;
+        text-decoration: none;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #2ee07a 0%, #16a34a 100%);
+        border: 1px solid rgba(46, 224, 122, 0.8);
+        box-shadow:
+            0 0 28px rgba(46, 224, 122, 0.42),
+            0 8px 32px rgba(46, 224, 122, 0.22),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+        cursor: grab;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        letter-spacing: 0.02em;
+        position: relative;
+    }
+
+    /* ドラッグハンドル風のドット */
+    .bookmarklet-link::before {
+        content: '';
+        width: 8px;
+        height: 12px;
+        background-image:
+            radial-gradient(circle, currentColor 1.2px, transparent 1.5px),
+            radial-gradient(circle, currentColor 1.2px, transparent 1.5px);
+        background-size: 4px 4px;
+        background-position: 0 0, 4px 0;
+        background-repeat: repeat-y;
+        opacity: 0.5;
+    }
+
+    .bookmarklet-link:hover {
+        transform: translateY(-3px);
+        box-shadow:
+            0 0 36px rgba(46, 224, 122, 0.62),
+            0 16px 48px rgba(46, 224, 122, 0.32),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .bookmarklet-link:active { cursor: grabbing; transform: translateY(-1px); }
+
+    .version-date {
+        display: block;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-faint);
+        margin-top: 20px;
+        letter-spacing: 0.04em;
+    }
+
+    /* ページロード時のステップ順次表示 */
+    .chrome, .page-header, .step, .drop-zone {
+        opacity: 0;
+        animation: reveal 0.6s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+    }
+    .chrome { animation-delay: 0.05s; }
+    .page-header { animation-delay: 0.15s; }
+    .step:nth-of-type(1) { animation-delay: 0.30s; }
+    .step:nth-of-type(2) { animation-delay: 0.40s; }
+    .drop-zone { animation-delay: 0.50s; }
+    .step:nth-of-type(3) { animation-delay: 0.62s; }
+
+    @keyframes reveal {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 520px) {
+        main { padding: 48px 16px 72px; }
+        .step { padding: 20px; gap: 16px; }
+        .step-num { width: 38px; height: 38px; font-size: 13px; }
+        .drop-zone { padding: 30px 20px; }
+        .bookmarklet-link { padding: 14px 24px; font-size: 15px; }
+        .chrome { font-size: 10px; }
+    }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="chrome">
+            <span class="chrome-dot"></span>
+            <span class="chrome-path">worldcup-2026<span class="sep">/</span>webcv-upload<span class="sep">/</span>setup</span>
+        </div>
+
+        <header class="page-header">
+            <span class="eyebrow">webCV Upload · Setup Guide</span>
+            <h1><span class="accent">2026W杯</span> webCVアップロード</h1>
+            <p class="subtitle">// ブックマークレットを追加して利用開始</p>
+        </header>
+
+        <div class="steps">
+            <section class="step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <p>ブラウザ画面で“ブックマークバー”が表示されていない場合、キーボードで <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> を押してください</p>
+                </div>
+            </section>
+
+            <section class="step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <p>下の<strong>「webCV_W杯テンプレ」</strong>を、画面上のブックマークバーへドラッグ&ドロップしてください</p>
+                </div>
+            </section>
+
+            <div class="drop-zone">
+                <div class="drop-zone-tag">Drag to bookmarks bar</div>
+                <a href="javascript:void(function(){var TEMPLATE={MaterialTitleHeader:{mode:'set',value:'2026W杯】'},CategoryCode:{mode:'set',value:'01'},GenreCode:{mode:'set',value:'12'},UsageRestrictionId:{mode:'set',value:'1'},KanyiInput:{mode:'set',value:'スポーツ局要確認'},MainCode:{mode:'set',value:'11F3900'},SubCode:{mode:'set',value:'0001'},MaterialTitleText:{mode:'skip'},CoverageDate:{mode:'skip'},OnAirDate:{mode:'skip'},MaterialContent:{mode:'set',value:'1行目\n2行目\n3行目'},Character:{mode:'skip'},Location:{mode:'skip'},GroupeId:{mode:'skip'},UsageScopeId:{mode:'skip'},DownloadScopeId:{mode:'skip'},DeliveryRestrictionCode:{mode:'skip'},DeliveryRestrictionSpecialNotes:{mode:'skip'},Copyright:{mode:'skip'},AudioTypeCode:{mode:'skip'},RecordingTypeCode:{mode:'set',value:'05'},RecordingDetailType:{mode:'set',value:'22'},Journalist:{mode:'skip'},Director:{mode:'skip'},Cameraman:{mode:'skip'},BroadCastStation:{mode:'skip'},ArchiveTarget:{mode:'set',value:'Target'},Transcription:{mode:'skip'},Email:{mode:'skip'}};var popup=window.open('','OriginalMaterialRegistWindow');if(!popup){alert('ウィンドウを開けませんでした。ポップアップブロックを確認してください。');return}var url='';try{url=popup.location.href}catch(e){alert('子ウィンドウにアクセスできません: '+e.message);return}if(url.indexOf('original-material-regist')===-1){popup.close();alert('元素材登録ウィンドウが開いていません。\n元素材登録ボタンを押してウィンドウを開いてから再度実行してください。');return}var d;try{d=popup.document}catch(e){alert('元素材登録ウィンドウにアクセスできません。');return}function setVal(el,v){if(!el)return;var proto=el.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:el.tagName===%27SELECT%27?HTMLSelectElement.prototype:HTMLInputElement.prototype;var desc=Object.getOwnPropertyDescriptor(proto,%27value%27);if(desc&amp;&amp;desc.set)desc.set.call(el,v);else el.value=v;el.dispatchEvent(new Event(%27change%27,{bubbles:true}));el.dispatchEvent(new Event(%27input%27,{bubbles:true}))}function applyMode(el,conf){if(!el||!conf)return;if(conf.mode===%27set%27)setVal(el,conf.value);else if(conf.mode===%27null%27)setVal(el,%27%27)}function applyById(id,conf){if(!conf||conf.mode===%27skip%27)return;var el=d.getElementById(id);applyMode(el,conf)}function visibleEl(selector){var els=d.querySelectorAll(selector);for(var i=0;i&lt;els.length;i++){if(els[i].getBoundingClientRect().width&gt;0)return els[i]}return null}function getKanyiTextarea(){var all=d.querySelectorAll(%27textarea%27);for(var i=0;i&lt;all.length;i++){var tr=all[i].closest(%27tr%27);if(tr&amp;&amp;tr.textContent.indexOf(%27簡易入力%27)!==-1)return all[i]}return null}function applyTranscription(conf){if(!conf||conf.mode===%27skip%27)return;var radios=d.querySelectorAll(%27input[type=&quot;radio&quot;][name=&quot;InputViewModel.Transcription&quot;]%27);if(conf.mode===%27null%27){return}for(var i=0;i&lt;radios.length;i++){var tr=radios[i].closest(%27label%27)||radios[i].closest(%27tr%27);var txt=tr?tr.textContent:%27%27;if(txt.indexOf(conf.value)!==-1){radios[i].checked=true;radios[i].dispatchEvent(new Event(%27change%27,{bubbles:true}));radios[i].dispatchEvent(new Event(%27click%27,{bubbles:true}));break}}}(function(){var conf=TEMPLATE.MaterialTitleText;if(conf&amp;&amp;conf.mode!==%27skip%27){var h=d.getElementById(%27MaterialTitleHeader%27);var row=h?h.closest(%27tr%27):null;var ti=row?row.querySelector(%27input[type=&quot;text&quot;]%27):null;applyMode(ti,conf)}})();applyById(%27MaterialTitleHeader%27,TEMPLATE.MaterialTitleHeader);applyById(%27UsageRestrictionId%27,TEMPLATE.UsageRestrictionId);applyById(%27CoverageDate%27,TEMPLATE.CoverageDate);applyById(%27OnAirDate%27,TEMPLATE.OnAirDate);applyById(%27MaterialContent%27,TEMPLATE.MaterialContent);applyById(%27Character%27,TEMPLATE.Character);applyById(%27Location%27,TEMPLATE.Location);applyById(%27GroupeId%27,TEMPLATE.GroupeId);applyById(%27UsageScopeId%27,TEMPLATE.UsageScopeId);applyById(%27DownloadScopeId%27,TEMPLATE.DownloadScopeId);applyById(%27DeliveryRestrictionCode%27,TEMPLATE.DeliveryRestrictionCode);applyById(%27AudioTypeCode%27,TEMPLATE.AudioTypeCode);applyById(%27RecordingTypeCode%27,TEMPLATE.RecordingTypeCode);applyById(%27RecordingDetailType%27,TEMPLATE.RecordingDetailType);applyById(%27Journalist%27,TEMPLATE.Journalist);applyById(%27Director%27,TEMPLATE.Director);applyById(%27Cameraman%27,TEMPLATE.Cameraman);applyById(%27BroadCastStation%27,TEMPLATE.BroadCastStation);applyById(%27ArchiveTarget%27,TEMPLATE.ArchiveTarget);applyById(%27Email%27,TEMPLATE.Email);applyTranscription(TEMPLATE.Transcription);(function(){var conf=TEMPLATE.DeliveryRestrictionSpecialNotes;if(conf&amp;&amp;conf.mode!==%27skip%27){var el=d.querySelector(%27textarea[name=&quot;InputViewModel.DeliveryRestrictionSpecialNotes&quot;]%27);applyMode(el,conf)}})();(function(){var conf=TEMPLATE.Copyright;if(conf&amp;&amp;conf.mode!==%27skip%27){var trs=d.querySelectorAll(%27tr%27);for(var i=0;i&lt;trs.length;i++){if(trs[i].textContent.indexOf(%27製作著作%27)!==-1){var ti=trs[i].querySelector(%27input[type=&quot;text&quot;]%27);if(ti){applyMode(ti,conf);break}}}}})();(function(){var conf=TEMPLATE.MainCode;if(conf&amp;&amp;conf.mode!==%27skip%27)applyMode(visibleEl(%27.main_code_text%27),conf)})();(function(){var conf=TEMPLATE.SubCode;if(conf&amp;&amp;conf.mode!==%27skip%27)applyMode(visibleEl(%27.sub_code_text%27),conf)})();try{popup.focus()}catch(e){}(function(){var conf=TEMPLATE.KanyiInput;if(conf&amp;&amp;conf.mode!==%27skip%27){setTimeout(function(){var ka=getKanyiTextarea();if(ka){if(ka.disabled)ka.disabled=false;applyMode(ka,conf)}},500)}})();var doneFlag=false;function finish(){if(doneFlag)return;doneFlag=true;try{popup.focus()}catch(e){}}var catConf=TEMPLATE.CategoryCode;var genConf=TEMPLATE.GenreCode;if(catConf&amp;&amp;catConf.mode===%27set%27){applyById(%27CategoryCode%27,catConf);if(genConf&amp;&amp;genConf.mode!==%27skip%27){var ge=d.getElementById(%27GenreCode%27);if(ge){var obs=new MutationObserver(function(muts,o){if(ge.options.length&gt;1){o.disconnect();applyMode(ge,genConf);finish()}});obs.observe(ge,{childList:true,subtree:true});setTimeout(function(){obs.disconnect();if(ge.options.length&gt;1)applyMode(ge,genConf);finish()},3000)}else{finish()}}else{finish()}}else{if(genConf&amp;&amp;genConf.mode!==%27skip%27)applyById(%27GenreCode%27,genConf);finish()}}())" class="bookmarklet-link">webCV_W杯テンプレ</a>
+                <span class="version-date">バージョン日付：2026/5/26</span>
+            </div>
+
+            <!-- 手順3を追加 -->
+            <section class="step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    <p>webCVの<strong>元素材登録画面</strong>を開き、お気に入り追加した「webCV_W杯テンプレ」をクリックしてください</p>
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>
